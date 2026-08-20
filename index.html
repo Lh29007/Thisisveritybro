@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verity AI</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #0d0f13;
+      color: white;
+      font-family: system-ui, sans-serif;
+    }
+
+    .app {
+      width: min(720px, 100%);
+      min-height: 100vh;
+      margin: auto;
+      padding: 16px;
+    }
+
+    header {
+      text-align: center;
+      padding: 10px 0 15px;
+    }
+
+    h1 {
+      margin: 0;
+    }
+
+    .subtitle {
+      color: #888;
+      font-size: 13px;
+    }
+
+    .avatar {
+      display: flex;
+      justify-content: center;
+      padding: 25px;
+    }
+
+    #avatar {
+      font-size: 90px;
+      transition: .2s;
+    }
+
+    #avatar.speaking {
+      animation: talk .4s infinite alternate;
+    }
+
+    @keyframes talk {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+
+    .chat {
+      background: #171a20;
+      border: 1px solid #292d35;
+      border-radius: 16px;
+      padding: 14px;
+      min-height: 250px;
+      max-height: 45vh;
+      overflow-y: auto;
+    }
+
+    .message {
+      padding: 11px 14px;
+      border-radius: 13px;
+      margin-bottom: 10px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .user {
+      background: #303540;
+      margin-left: 12%;
+    }
+
+    .ai {
+      background: #22262e;
+      margin-right: 12%;
+    }
+
+    .error {
+      background: #4b2020;
+      color: #ffb5b5;
+    }
+
+    #status {
+      min-height: 24px;
+      text-align: center;
+      color: #aaa;
+      padding: 5px;
+      font-size: 14px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    textarea {
+      flex: 1;
+      min-height: 52px;
+      resize: none;
+      border: 1px solid #30343e;
+      border-radius: 13px;
+      background: #171a20;
+      color: white;
+      padding: 13px;
+      font: inherit;
+      outline: none;
+    }
+
+    button {
+      border: 0;
+      border-radius: 13px;
+      background: #303540;
+      color: white;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-size: 17px;
+    }
+
+    button:hover {
+      background: #3b404d;
+    }
+
+    button:disabled {
+      opacity: .45;
+    }
+
+    #mic.listening {
+      background: #8b2929;
+    }
+
+    details {
+      margin-top: 12px;
+      padding: 14px;
+      background: #171a20;
+      border: 1px solid #292d35;
+      border-radius: 15px;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .setting {
+      margin-top: 13px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: #bbb;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 11px;
+      border: 1px solid #30343e;
+      border-radius: 10px;
+      background: #0d0f13;
+      color: white;
+      outline: none;
+    }
+
+    #diagnostic {
+      margin-top: 10px;
+      background: #090b0e;
+      border-radius: 10px;
+      padding: 10px;
+      height: 180px;
+      overflow-y: auto;
+      font: 12px monospace;
+      white-space: pre-wrap;
+    }
+
+    .diag-ok {
+      color: #75e69a;
+    }
+
+    .diag-error {
+      color: #ff7777;
+    }
+
+    .diag-info {
+      color: #8ebcff;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <header>
+    <h1>🤖 Verity AI</h1>
+    <div class="subtitle">
+      OpenRouter + Fish Audio
+    </div>
+  </header>
+
+
+  <div class="avatar">
+    <div id="avatar">🤖</div>
+  </div>
+
+
+  <div id="chat" class="chat">
+
+    <div class="message ai">
+      Salut ! 👋 Je suis Verity.
+    </div>
+
+  </div>
+
+
+  <div id="status"></div>
+
+
+  <div class="controls">
+
+    <textarea
+      id="message"
+      placeholder="Écris un message..."
+    ></textarea>
+
+    <button id="mic">🎤</button>
+
+    <button id="send">➤</button>
+
+  </div>
+
+
+  <details>
+
+    <summary>⚙️ Configuration</summary>
+
+
+    <div class="setting">
+
+      <label>🔑 OpenRouter API Key</label>
+
+      <input
+        id="openrouterKey"
+        type="password"
+        placeholder="sk-or-..."
+      >
+
+    </div>
+
+
+    <div class="setting">
+
+      <label>🧠 Modèle</label>
+
+      <input
+        id="model"
+        value="openai/gpt-oss-20b:free"
+      >
+
+    </div>
+
+
+    <div class="setting">
+
+      <label>🎭 Personnalité</label>
+
+      <input
+        id="systemPrompt"
+        value="Tu es Verity, une IA sympathique, naturelle et expressive. Réponds en français."
+      >
+
+    </div>
+
+
+    <div class="setting">
+
+      <label>🐟 Fish Audio API Key</label>
+
+      <input
+        id="fishKey"
+        type="password"
+        placeholder="Ta clé Fish Audio"
+      >
+
+    </div>
+
+
+    <div class="setting">
+
+      <label>🗣️ Voice ID</label>
+
+      <input
+        id="voiceId"
+        value="8c7928c5db264ae385dfc208431e24b9"
+      >
+
+    </div>
+
+  </details>
+
+
+  <details>
+
+    <summary>🔧 Diagnostic</summary>
+
+    <div id="diagnostic"></div>
+
+  </details>
+
+</div>
+
+
+<script src="diagnostic.js"></script>
+<script src="app.js"></script>
+
+</body>
+  </html>
